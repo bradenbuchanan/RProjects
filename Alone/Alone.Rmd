@@ -3,28 +3,61 @@ title: "Alone"
 author: "Braden Buchanan"
 date: "2023-09-06"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+#Load Alone Tidy Tuesday Data
+```{r}
+survivalists <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/survivalists.csv')
+loadouts <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/loadouts.csv')
+episodes <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/episodes.csv')
+seasons <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/seasons.csv')
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+Load packages
+```{r}
+library(tidyverse)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#Descriptive Statistics
+
+###Where are the different participants from in the country?
+```{r}
+survivalists %>%
+  group_by(country) %>%
+  count() %>%
+```
+Majority of participants are from the United States. In total across 9 seasons, 79/94 from the United States, followed by 13/94 from Canada.
+
+###What states are most US participants from?
+```{r}
+survivalists %>%
+  group_by(state) %>%
+  count() %>%
+  arrange(desc(n))
+```
+
+
+### Male vs female winners
+```{r}
+survivalists %>%
+  filter(result == "1") %>%
+  group_by(season, gender, days_lasted) %>%
+  summarise(winner_count = n())
+```
+Over 9 seasons of Alone, only males have came in first place. 
+
+###How many women came in 2nd place?
+```{r}
+survivalists %>%
+  filter(result == 2 & gender == "Female") %>%
+  group_by(season, gender, days_lasted) %>%
+  summarize(second_place = n())
+```
+
+
