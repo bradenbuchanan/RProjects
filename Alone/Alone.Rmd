@@ -42,6 +42,13 @@ survivalists %>%
   arrange(desc(n))
 ```
 
+###What country are most winners from?
+```{r}
+survivalists %>%
+  select(season, country, result, days_lasted, profession) %>%
+  filter(result == 1) %>%
+  group_by(country)
+```
 
 ### Male vs female winners
 ```{r}
@@ -59,5 +66,4 @@ survivalists %>%
   group_by(season, gender, days_lasted) %>%
   summarize(second_place = n())
 ```
-
 
