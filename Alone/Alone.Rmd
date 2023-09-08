@@ -11,7 +11,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#Load Alone Tidy Tuesday Data
+# Load Alone Tidy Tuesday Data
 ```{r}
 survivalists <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/survivalists.csv')
 loadouts <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-01-24/loadouts.csv')
@@ -24,17 +24,17 @@ Load packages
 library(tidyverse)
 ```
 
-#Descriptive Statistics
+# Descriptive Statistics
 
-###Where are the different participants from in the country?
+### Where are the different participants from in the country?
 ```{r}
 survivalists %>%
   group_by(country) %>%
-  count() %>%
+  count()
 ```
 Majority of participants are from the United States. In total across 9 seasons, 79/94 from the United States, followed by 13/94 from Canada.
 
-###What states are most US participants from?
+### What states are most US participants from?
 ```{r}
 survivalists %>%
   group_by(state) %>%
@@ -42,7 +42,7 @@ survivalists %>%
   arrange(desc(n))
 ```
 
-###What country are most winners from?
+### What country are most winners from?
 ```{r}
 survivalists %>%
   select(season, country, result, days_lasted, profession) %>%
@@ -59,11 +59,71 @@ survivalists %>%
 ```
 Over 9 seasons of Alone, only males have came in first place. 
 
-###How many women came in 2nd place?
+### How many women came in 2nd place and avg days lasted?
 ```{r}
 survivalists %>%
   filter(result == 2 & gender == "Female") %>%
   group_by(season, gender, days_lasted) %>%
   summarize(second_place = n())
-```
 
+survivalists %>%
+  select(gender, days_lasted, result) %>%
+  filter(result == 2 & gender == "Female") %>%
+  mutate(avg_days_lasted = mean(days_lasted))
+```
+4x Women came in second place. On average, the 2nd place women last 80.8 days
+
+### What were the main reasons for participants to tap out?
+```{r}
+survivalists %>%
+  select(season, reason_tapped_out, result, gender) %>%
+  filter(!is.na(reason_tapped_out)) %>%
+  mutate(reason_tapped_out = ifelse(str_detect(reason_tapped_out, "Starvation"), "Starvation", reason_tapped_out)) %>%
+  count(reason_tapped_out) %>%
+  arrange(desc(n))
+```
+Most participants tap out due to starvation or missing their family.
+
+### Main reason for 2nd place for tapping out?
+```{r}
+library(stringr)
+
+survivalists %>%
+  select(season, reason_tapped_out, result, gender) %>%
+  filter(!is.na(reason_tapped_out), result == 2) %>%
+  mutate(reason_tapped_out = ifelse(str_detect(reason_tapped_out, "Starvation"), "Starvation", reason_tapped_out)) %>%
+  count(reason_tapped_out) %>%
+  arrange(desc(n))
+```
+Main reasons participants in 2nd place tapped out was due to starvation.
+
+### Most common equipment participants had
+```{r}
+mostCommonLoadouts <- loadouts %>%
+  select(item_number, item_detailed, item) %>%
+  count(item) %>%
+  mutate(item = fct_reorder(item, n)) %>%
+  arrange(desc(n))
+
+ggplot(mostCommonLoadouts, aes(x = item, y = n, fill = item)) +
+  geom_bar(stat="identity") +
+    geom_text(aes(label=n), position=position_dodge(width=0.9), hjust=-0.3) +
+  coord_flip() + 
+  labs(x = "Item", 
+       y = "Number of Items") + 
+  theme(legend.position = "none")
+```
+Pots, fishing gear, and sleeping bags were the most common loadouts for participants.
+
+# Inferential Statistics
+Use a t-test to see if gender significantly affects the number of days lasted.
+```{r}
+# Filtering data to exclude rows where 'days_lasted' is NA
+filtered_data <- survivalists %>%
+  filter(!is.na(days_lasted))
+
+t_test_result <- t.test(days_lasted ~ gender, data = filtered_data)
+
+print(t_test_result)
+```
+Men and women seem to last different amounts of time on the show, with women lasting longer on average. However, we're not 100% sure if this difference is because of gender or just happened by chance. We'd need more evidence or a stronger result to be certain.
