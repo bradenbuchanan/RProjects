@@ -127,3 +127,37 @@ t_test_result <- t.test(days_lasted ~ gender, data = filtered_data)
 print(t_test_result)
 ```
 Men and women seem to last different amounts of time on the show, with women lasting longer on average. However, we're not 100% sure if this difference is because of gender or just happened by chance. We'd need more evidence or a stronger result to be certain.
+
+### Is age correlated with success in the show?
+```{r}
+# Compute the correlation
+correlation <- cor(survivalists$age, survivalists$days_lasted, use = "complete.obs")
+
+print(correlation)
+
+
+# Compute the correlation for age and result
+correlation_result <- cor(survivalists$age, survivalists$result, use = "complete.obs")
+
+print(correlation_result)
+
+# Correlation test for age and days_lasted
+test_result <- cor.test(survivalists$age, survivalists$days_lasted, use = "complete.obs")
+
+print(test_result)
+```
+Based on the data and tests conducted, age doesn't seem to have a significant impact on how long participants last in the show or on their result rankings.
+
+There is a weak positive correlation of 0.0662 between age and the number of days participants lasted in the show. However, this correlation is not statistically significant with a p-value of 0.5259.
+
+There's also a weak negative correlation of -0.0419 between age and the result, but the significance of this relationship wasn't tested in the provided outputs.
+
+### Are survivalists from certain professions more likely to succeed?
+```{r}
+contingency_table <- table(survivalists$profession, survivalists$result)
+chi_squared_test <- chisq.test(contingency_table)
+print(chi_squared_test)
+```
+The data doesn't provide strong evidence to suggest that the profession of survivalists is associated with their success on the show.
+
+The p-value is 0.4184, which is greater than 0.05. This suggests that, based on the data we don't have enough evidence to reject the null hypothesis. 
