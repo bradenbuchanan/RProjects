@@ -115,6 +115,15 @@ sports %>%
   arrange(desc(total_rev_menwomen))
 ```
 
+### What is the total revenue generated from college sports in Texas? 
+```{r}
+sports %>%
+  select(state_cd, total_rev_menwomen) %>%
+  group_by(state_cd = "TX") %>%
+  summarise(total_rev_menwomen = sum(total_rev_menwomen, na.rm = TRUE))
+```
+The total revenue generated from college sports in Texas was sixty-nine billion two hundred ninety-one million six hundred eighty thousand forty-two (69291680042)
+
 ### Revenue by sports for Indiana University
 ```{r}
 indianaUniversity <- sports %>%
@@ -166,5 +175,103 @@ menWomenParicSports %>%
   theme_minimal() +
   scale_fill_manual(values = c("Men" = "blue", "Women" = "pink")) +
   scale_y_continuous(labels = comma)
+```
+
+### What is the revenue distrubtion for different sports by men and women? 
+```{r}
+totalRevMen <- sports %>%
+  select(sports, rev_men) %>%
+  group_by(sports) %>%
+  summarise(total_rev_men = sum(rev_men, na.rm = TRUE)) %>%
+  arrange(desc(total_rev_men))
+
+totalRevWomen <- sports %>%
+  select(sports, rev_women) %>%
+  group_by(sports) %>%
+  summarise(total_rev_women = sum(rev_women, na.rm = TRUE)) %>%
+  arrange(desc(total_rev_women))
+
+combined_data <- left_join(totalRevMen, totalRevWomen, by = "sports")
+
+library(ggplot2)
+
+ggplot(data = combined_data, aes(x = reorder(sports, -total_rev_men))) +   # Ordering bars by total_rev_men
+  geom_bar(aes(y = total_rev_men, fill = "Men"), stat = "identity", position = "dodge") +
+  geom_bar(aes(y = total_rev_women, fill = "Women"), stat = "identity", position = "dodge") +
+  labs(
+    title = "Revenue Comparison: Men vs. Women in College Sports",
+    y = "Total Revenue",
+    x = "Sport",
+    fill = "Gender"
+  ) +
+  theme_minimal() + 
+  scale_y_continuous(labels = comma) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### What states have the schools that generate the highest revenue?
+```{r}
+top_states_rev <- sports %>%
+  group_by(state_cd) %>%
+  summarise(total_revenue = sum(total_rev_menwomen, na.rm = TRUE)) %>%
+  arrange(desc(total_revenue))
+
+print(top_states_rev)
+
+# Install & Load the required packages
+install.packages(c("sf", "viridis"))
+library(sf)
+library(ggplot2)
+library(viridis)
+library(maps)
+library(scales)
+
+print(unique(top_states_rev$state_cd))
+print(unique(us_states$ID))
+# Add a column of state names to top_states_rev based on abbreviations
+top_states_rev$state_name <- state.name[match(top_states_rev$state_cd, state.abb)]
+
+convert_state_code <- function(code) {
+  state_lookup <- data.frame(code = state.abb, name = tolower(state.name))
+  return(state_lookup$name[state_lookup$code == code])
+}
+
+top_states_rev$state_name <- sapply(top_states_rev$state_cd, convert_state_code)
+
+
+# Get US Map Data
+us_states <- maps::map("state", plot = FALSE, fill = TRUE) %>% 
+  st_as_sf()
+
+top_states_rev$state_name <- as.character(top_states_rev$state_name)
+
+# Merge the map data with your `top_states` data
+merged_data <- left_join(us_states, top_states_rev, by = c("ID" = "state_name"))
+
+# Custom function to format numbers into "M" for millions
+format_millions <- function(x) {
+  return(scales::dollar_format(scale = 1e-6, suffix = "M")(x))
+}
+
+breaks_to_use <- scales::pretty_breaks(n = 5)(range(merged_data$total_revenue))
+
+ggplot(data = merged_data) + 
+  geom_sf(aes(fill = total_revenue)) + 
+  scale_fill_viridis(name = "Total Revenue", option = "C", direction = -1,
+                     labels = scales::label_number(scale = 1e-6, suffix = 'M')) +
+  theme_light() +
+  labs(title = "Total Revenue by State for College Sports") + 
+  theme(legend.position = "bottom", 
+        legend.key.size = unit(1.5, "cm"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.ticks = element_blank(), 
+        axis.text = element_blank(),
+        panel.border = element_blank())
+```
+
+# Inferential Statistics
+```{r}
+
 ```
 
