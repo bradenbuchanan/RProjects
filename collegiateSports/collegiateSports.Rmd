@@ -271,7 +271,20 @@ ggplot(data = merged_data) +
 ```
 
 # Inferential Statistics
-```{r}
 
+### Difference in Participation Rates between Genders
+```{r}
+t.test(sports$partic_men, sports$partic_women)
 ```
+Based on the t-test results, we can conclude that there is a statistically significant difference between the means of participation rates between men and women. Specifically, the mean for partic_men is higher than that for partic_women, with a difference estimated to be between 9.88 and 10.42. This difference is highly significant, given the extremely small p-value.
+
+### Correlation between Revenue and Expenditure for Men's Sports
+```{r}
+cor.test(sports$total_exp_menwomen, sports$exp_men)
+```
+There's a very strong positive linear relationship between total_exp_menwomen and exp_men. This means as expenditures for men increase, the total expenditures for both men and women also tend to increase, and vice versa.
+
+The correlation coefficient of approximately 0.9846 is statistically significant with a p-value effectively at 0. This suggests that it's highly unlikely that such a strong correlation occurred by chance alone.
+
+###
 
