@@ -2,10 +2,14 @@
 title: "collegiateSports"
 author: "Braden Buchanan"
 date: "2023-09-08"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
 editor_options: 
   chunk_output_type: console
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -193,8 +197,6 @@ totalRevWomen <- sports %>%
 
 combined_data <- left_join(totalRevMen, totalRevWomen, by = "sports")
 
-library(ggplot2)
-
 ggplot(data = combined_data, aes(x = reorder(sports, -total_rev_men))) +   # Ordering bars by total_rev_men
   geom_bar(aes(y = total_rev_men, fill = "Men"), stat = "identity", position = "dodge") +
   geom_bar(aes(y = total_rev_women, fill = "Women"), stat = "identity", position = "dodge") +
@@ -209,6 +211,106 @@ ggplot(data = combined_data, aes(x = reorder(sports, -total_rev_men))) +   # Ord
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+### What universities have the most male and female students?
+```{r}
+sports %>%
+  select(institution_name, year, ef_female_count, ef_male_count, ef_total_count) %>%
+  filter(ef_female_count > 17000 & ef_male_count > 17000 & year == 2019) %>%
+  distinct() %>%
+  arrange(desc(ef_total_count))
+```
+
+### What is the total male count vs women count across UT Austin?
+```{r}
+sports %>%
+  filter(institution_name == "The University of Texas at Austin") %>%
+  distinct(ef_male_count, year)
+         
+UTAustinEfMaleCount <- sports %>%
+   filter(institution_name == "The University of Texas at Austin") %>%
+  distinct(ef_male_count, year)
+
+UTAustinEfFemaleCount <- sports %>%
+   filter(institution_name == "The University of Texas at Austin") %>%
+  distinct(ef_female_count, year)
+
+combinedUTAustinMenWomen <- left_join(UTAustinEfMaleCount, UTAustinEfFemaleCount, by = "year")
+
+library(ggplot2)
+library(tidyr)
+
+combinedUTAustinMenWomen %>%
+  pivot_longer(cols = c(ef_male_count, ef_female_count), 
+               names_to = "gender", 
+               values_to = "count") %>%
+  ggplot(aes(x=year, y=count, color=gender, group=gender)) +
+  geom_line() +
+  geom_point() +
+  geom_text(aes(label=count), vjust=-0.5, size=3.5) +  # This line adds labels. You can adjust `vjust` for vertical position and `size` for text size
+  labs(title = "UT Austin Attendance Over Time by Gender",
+       x = "Year",
+       y = "Number of Students",
+       color = "Gender") +
+  theme_minimal() +
+  scale_color_manual(values = c("ef_male_count" = "blue", "ef_female_count" = "pink"))
+```
+
+### How has sports revenue changed over time for UT Austin?
+```{r}
+library(scales)
+sports %>%
+  filter(institution_name == "The University of Texas at Austin") %>%
+  group_by(year) %>%
+  summarize(total_revenue = sum(total_rev_menwomen, na.rm = TRUE)) %>%
+  ggplot(aes(year, total_revenue)) +
+  geom_line() +
+  geom_point() +
+  scale_y_continuous(labels = scales::dollar_format(scale = 1))
+```
+
+### What is football revenue overtime for the top 10 universities by total sports revenue?
+```{r}
+sports %>%
+  group_by(sports, year) %>%
+  summarise(total_revenue = sum(total_rev_menwomen, na.rm = TRUE)) %>%
+  arrange(desc(total_revenue)) %>%
+  head(10)
+
+top_schools_year <- sports %>%
+  group_by(institution_name) %>%
+  summarise(school_total_revenue = sum(total_rev_menwomen, na.rm = TRUE)) %>%
+  arrange(desc(school_total_revenue)) %>%
+  head(10) %>%
+  pull(institution_name)
+
+# List the revenues of sports programs for each of these top 10 schools
+sports_breakdown_year <- sports %>%
+  filter(institution_name %in% top_schools_year, 
+         !(sports %in% c("Rifle", "Weight lifting", "Archery", "Synchronized Swimming", "Diving", "Badminton", "Table Tennis", "Team Handball", "Rodeo", "Skiiing", "Track and Field, Indoor", "Track and Field, X-Country", "Track and Field, Outdoor"))) %>%
+  group_by(institution_name, sports, year) %>%
+  summarise(sport_revenue = sum(total_rev_menwomen, na.rm = TRUE)) %>%
+  arrange(institution_name, desc(sport_revenue))
+
+print(sports_breakdown)
+
+sports_breakdown_year %>%
+  filter(sports == "Football") %>%
+  group_by(year)
+
+sports_breakdown_year %>%
+  filter(sports == "Football") %>%
+  ggplot(aes(x=year, y=sport_revenue, color=institution_name)) +
+  geom_line(aes(group=institution_name)) +
+  geom_point() +
+  facet_wrap(~institution_name, scales = "free_y") + 
+  labs(title="Football Revenue by Year for Different Schools",
+       x="Year",
+       y="Revenue ($)",
+       color="School") +
+  scale_y_continuous(labels = scales::dollar_format(label = 1)) +
+  theme_minimal()
+```
+
 ### What states have the schools that generate the highest revenue?
 ```{r}
 top_states_rev <- sports %>%
@@ -219,6 +321,7 @@ top_states_rev <- sports %>%
 print(top_states_rev)
 
 # Install & Load the required packages
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
 install.packages(c("sf", "viridis"))
 library(sf)
 library(ggplot2)
@@ -226,8 +329,6 @@ library(viridis)
 library(maps)
 library(scales)
 
-print(unique(top_states_rev$state_cd))
-print(unique(us_states$ID))
 # Add a column of state names to top_states_rev based on abbreviations
 top_states_rev$state_name <- state.name[match(top_states_rev$state_cd, state.abb)]
 
@@ -237,7 +338,6 @@ convert_state_code <- function(code) {
 }
 
 top_states_rev$state_name <- sapply(top_states_rev$state_cd, convert_state_code)
-
 
 # Get US Map Data
 us_states <- maps::map("state", plot = FALSE, fill = TRUE) %>% 
@@ -286,5 +386,15 @@ There's a very strong positive linear relationship between total_exp_menwomen an
 
 The correlation coefficient of approximately 0.9846 is statistically significant with a p-value effectively at 0. This suggests that it's highly unlikely that such a strong correlation occurred by chance alone.
 
-###
+### Difference in revenue between men and womens sports
+```{r}
+t.test(sports$rev_men, sports$rev_women, paired = TRUE)
+```
+Based on the t-test results, we can say that there's a statistically significant difference between the revenues of men (rev_men) and women (rev_women) in sports. Specifically, the revenue for men appears to be higher than that for women by an average of approximately $135206.3.
 
+### Association between School Classification and Sports Offered
+```{r}
+table_data <- table(sports$classification_name, sports$sports)
+chisq.test(table_data)
+```
+The result indicates that different classifications of schools likely have different distributions of sports offered.
