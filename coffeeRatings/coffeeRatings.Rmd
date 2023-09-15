@@ -10,3 +10,126 @@ editor_options:
   chunk_output_type: console
 ---
 
+For this tidyTuesday, I'm following along David Robinson's video on YouTube going through this dataset. 
+
+https://www.youtube.com/watch?v=-1x8Kpyndss&t=2694s
+
+# Import Data
+```{r}
+coffee_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-07/coffee_ratings.csv') %>%
+  mutate(coffee_id = row_number()) %>%
+  filter(total_cup_points > 0)
+```
+
+# Load packages
+```{r}
+library(tidyverse)
+library(stringr)
+library(scales)
+theme_set(theme_light())
+```
+
+```{r}
+coffee_ratings %>%
+  count(species, sort = TRUE)
+
+coffee_lumped <- coffee_ratings %>%
+  filter(!is.na(variety),
+         total_cup_points > 10) %>%
+  mutate(variety = fct_lump(variety, 10), sort = TRUE)
+  
+coffee_lumped %>%
+  ggplot(aes(total_cup_points, variety)) + 
+  geom_boxplot()
+
+coffee_lumped %>%
+  ggplot(aes(total_cup_points, fill = variety)) + 
+  geom_histogram(binwidth = 2) +
+  facet_wrap(~variety, scale = "free_y") +
+  theme(legend.position = "none")
+  
+
+coffee_ratings %>%
+  mutate(coffee_id = row_number()) %>%
+  select(coffee_id, total_cup_points, species, variety, owner, farm_name, country_of_origin, aroma:moisture)
+```
+
+```{r}
+#trick to see which columns have missing NA values 
+coffee_ratings %>%
+  summarise(across(everything(), ~ mean(!is.na(.)))) %>%
+  gather() %>%
+  view()
+
+coffee_ratings %>%
+  count(producer, sort = TRUE)
+
+coffee_ratings %>%
+  count(company, sort = TRUE)
+
+coffee_ratings %>%
+  count(color, sort = TRUE)
+
+coffee_ratings %>%
+  count(country = fct_lump(country_of_origin, 12), sort = TRUE) %>%
+  filter(!is.na(country)) %>%
+  mutate(country = fct_reorder(country, n)) %>%
+  ggplot(aes(n, country)) +
+  geom_col()
+  
+coffee_ratings %>%
+  mutate(country = fct_lump(country_of_origin, 12),
+         country = fct_reorder(country, total_cup_points)) %>%
+  ggplot(aes(total_cup_points, country)) + 
+  geom_boxplot()
+```
+
+Interesting dimensions: 
+* country
+* variety
+* company
+
+```{r}
+install.packages("ggridges")
+library(ggridges)
+
+coffee_ratings %>%
+  mutate(coffee_id = row_number()) %>%
+  select(coffee_id, total_cup_points, variety, company, country_of_origin, aroma:moisture) %>%
+  pivot_longer(aroma:cupper_points, names_to = "metric", values_to = "value") %>%
+  group_by(coffee_id, total_cup_points) %>%
+  summarise(total = sum(value))
+
+
+coffee_metrics <- coffee_ratings %>%
+  mutate(coffee_id = row_number()) %>%
+  select(coffee_id, total_cup_points, variety, company, country_of_origin, aroma:moisture) %>%
+  pivot_longer(aroma:cupper_points, names_to = "metric", values_to = "value")
+
+coffee_metrics %>%
+  mutate(metric = fct_reorder(metric, value)) %>%
+  ggplot(aes(value, metric)) +
+  geom_density_ridges()
+```
+
+```{r}
+install.packages("widyr")
+install.packages("ggraph")
+library(widyr)
+library(ggraph)
+library(igraph)
+
+correlations <- coffee_metrics %>%
+  pairwise_cor(metric, coffee_id, value, sort = TRUE)
+
+correlations %>%
+  head(60) %>%
+  graph_from_data_frame() %>%
+  ggraph() +
+  geom_edge_link(aes(edge_alpha = correlation)) +
+  geom_node_point() +
+  geom_node_text(aes(label = name), repel = TRUE)
+
+
+```
+
