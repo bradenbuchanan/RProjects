@@ -26,6 +26,8 @@ coffee_ratings <- readr::read_csv('https://raw.githubusercontent.com/rfordatasci
 library(tidyverse)
 library(stringr)
 library(scales)
+install.packages("jsonlite")
+library(jsonlite)
 theme_set(theme_light())
 ```
 
@@ -82,54 +84,5 @@ coffee_ratings %>%
          country = fct_reorder(country, total_cup_points)) %>%
   ggplot(aes(total_cup_points, country)) + 
   geom_boxplot()
-```
-
-Interesting dimensions: 
-* country
-* variety
-* company
-
-```{r}
-install.packages("ggridges")
-library(ggridges)
-
-coffee_ratings %>%
-  mutate(coffee_id = row_number()) %>%
-  select(coffee_id, total_cup_points, variety, company, country_of_origin, aroma:moisture) %>%
-  pivot_longer(aroma:cupper_points, names_to = "metric", values_to = "value") %>%
-  group_by(coffee_id, total_cup_points) %>%
-  summarise(total = sum(value))
-
-
-coffee_metrics <- coffee_ratings %>%
-  mutate(coffee_id = row_number()) %>%
-  select(coffee_id, total_cup_points, variety, company, country_of_origin, aroma:moisture) %>%
-  pivot_longer(aroma:cupper_points, names_to = "metric", values_to = "value")
-
-coffee_metrics %>%
-  mutate(metric = fct_reorder(metric, value)) %>%
-  ggplot(aes(value, metric)) +
-  geom_density_ridges()
-```
-
-```{r}
-install.packages("widyr")
-install.packages("ggraph")
-library(widyr)
-library(ggraph)
-library(igraph)
-
-correlations <- coffee_metrics %>%
-  pairwise_cor(metric, coffee_id, value, sort = TRUE)
-
-correlations %>%
-  head(60) %>%
-  graph_from_data_frame() %>%
-  ggraph() +
-  geom_edge_link(aes(edge_alpha = correlation)) +
-  geom_node_point() +
-  geom_node_text(aes(label = name), repel = TRUE)
-
-
 ```
 
