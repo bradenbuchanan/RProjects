@@ -1,6 +1,6 @@
-## tidyTuesday: R Programming Practice Repository
+## RProjects: R Programming Practice Repository
 
-Welcome to my `tidyTuesday` repository! The primary aim of this repository is to practice and enhance my R programming skills, specifically harnessing the power of the `tidyverse`. 
+Welcome to my `RProjects` repository! The primary aim of this repository is to practice and enhance my R programming skills, specifically harnessing the power of the `tidyverse`. 
 
 ### Objectives
 
@@ -14,7 +14,7 @@ Welcome to my `tidyTuesday` repository! The primary aim of this repository is to
 
 ### Data Source
 
-The datasets used in this repository are sourced from the `tidyTuesday` project, a weekly data project aimed at the R ecosystem, emphasizing the use of the `tidyverse` packages. Each week, a new dataset is made available for the community, making it an excellent platform for practicing and learning.
+The datasets used in this repository are sourced from the `tidyTuesday` project and custom data sets I make using simulated data. 
 
 ### What to Expect
 
@@ -28,4 +28,4 @@ While the primary goal of this repo is personal learning and practice, suggestio
 
 ---
 
-You can simply copy and paste this into your `README.md` file for the `tidyTuesday` repository. Make sure to adjust or add more details if you feel necessary!
+You can simply copy and paste this into your `README.md` file for the `RProjects` repository. Make sure to adjust or add more details if you feel necessary!
