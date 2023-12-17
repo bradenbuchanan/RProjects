@@ -15,3 +15,46 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
 
+### Simulated Data
+```{r}
+# Load necessary library
+library(dplyr)
+
+# Simplified function to simulate user behavior based on user type
+simulate_user_behavior <- function(user_type) {
+  if (user_type == "Professional") {
+    activity_frequency <- sample(10:25, 1)
+    distance <- runif(1, 20, 100)
+  } else if (user_type == "Amateur") {
+    activity_frequency <- sample(7:15, 1)
+    distance <- runif(1, 10, 50)
+  } else {
+    # Casual users
+    activity_frequency <- sample(1:10, 1)
+    distance <- runif(1, 1, 12)
+  }
+
+  # Simulate other metrics
+  duration <- distance * runif(1, 10, 12)
+  speed <- distance / (duration / 60)
+  
+  return(c(activity_frequency, distance, duration, speed))
+}
+
+# Generate user data
+n_samples <- 1000
+ages <- sample(18:60, n_samples, replace = TRUE)
+user_types <- sapply(ages, assign_user_type)
+
+# Simulate behavior based on user types
+data <- t(sapply(user_types, simulate_user_behavior))
+colnames(data) <- c("ActivityFrequency", "Distance", "Duration", "Speed")
+
+# Combine with user demographics
+user_data <- data.frame(Age = ages, UserType = user_types)
+simulated_data <- cbind(user_data, data)
+
+# Display the first few rows of the simulated data
+head(simulated_data)
+```
+
