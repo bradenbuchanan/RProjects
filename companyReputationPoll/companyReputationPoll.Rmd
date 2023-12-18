@@ -10,3 +10,80 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+# Load packages
+```{r}
+library(tidytuesdayR)
+library(tidyverse)
+```
+
+# Load Data
+```{r}
+tuesdata <- tidytuesdayR::tt_load("2022-05-31")
+
+reputation <- tuesdata$reputation
+poll <- tuesdata$poll
+```
+
+# Examine Reputation Data
+```{r}
+summary(reputation)
+head(reputation)
+```
+
+### How many companies are in this list?
+Reputation list accounts for 100 companies
+```{r}
+reputation %>%
+  select(company) %>%
+  unique() %>%
+  count()
+```
+
+### What industries are the most represented in this data?
+```{r}
+mostCommonIndustries <- reputation %>%
+  select(company, industry) %>%
+  unique() %>%
+  count(industry) %>%
+  arrange(desc(n))
+
+mostCommonIndustries
+
+ggplot(mostCommonIndustries, aes(fct_reorder(industry, n), n, fill=industry)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = n), hjust = 1.5, vjust = .4, size = 2.5) +
+  coord_flip() + 
+  theme(legend.position = "none") +
+  ggtitle("Most common industries in Reputation data set") +
+  ylab("Count") + 
+  xlab("Industry")
+```
+
+### What Tech companies had the highest reputation on average?
+Samsung, Microsoft, and IBM are the top 3 tech companies by average score. Tiktok, Facebook, and Twitter are the lowest 3 tech companies
+```{r}
+reputation %>%
+  select(company, industry, name, score, rank) %>%
+  filter(industry == "Tech") %>%
+  group_by(company) %>%
+  summarize(avg_score = mean(score), .groups = "drop") %>%
+  arrange(desc(avg_score))
+```
+
+### What tech company has the highest trust rating?
+```{r}
+techTrustRatings <- reputation %>%
+  select(company, industry, name, score, rank) %>%
+  filter(industry == "Tech", name == "TRUST") %>%
+  group_by(company) %>%
+  arrange(desc(score))
+
+techTrustRatings
+
+ggplot(techTrustRatings, aes(fct_reorder(company, score), score, fill = company)) +
+  geom_bar(stat = "identity") +
+  coord_flip() + 
+  theme(legend.position = "none")
+```
+
