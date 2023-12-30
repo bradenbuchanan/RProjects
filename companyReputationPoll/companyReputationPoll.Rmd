@@ -87,3 +87,35 @@ ggplot(techTrustRatings, aes(fct_reorder(company, score), score, fill = company)
   theme(legend.position = "none")
 ```
 
+What companies had the lowest trust rating?
+```{r}
+worstCompanies <- reputation %>%
+  select(company, industry, name, score, rank) %>%
+  group_by(company) %>%
+  summarize(avg_score = mean(score), .groups = "drop") %>%
+  arrange(avg_score) %>%
+  head(20)
+
+worstCompanies
+
+ggplot(worstCompanies, aes(fct_reorder(company, avg_score), avg_score, fill = company)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Company name", y = "Avg. score") +
+  ggtitle("Worst Reputatable Companies") +
+  theme(legend.position = "none")
+```
+
+### Tech reputations change over time
+```{r}
+poll %>%
+  filter(industry == "Tech") %>%
+  select(company, year, rank, rq) %>%
+  ggplot(aes(x = year, y = rq, group = company, color = company)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Reputation Quotient over Years", x = "Year", y = "Reputation Quotient")
+```
+
+
+
