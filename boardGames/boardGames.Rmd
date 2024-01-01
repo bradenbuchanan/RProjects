@@ -11,3 +11,47 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)
+library(scales)
+theme_set(theme_light())
+```
+
+
+```{r}
+board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
+```
+
+### EDA
+
+```{r}
+board_games %>%
+  count(year_published) %>%
+  arrange(desc(year_published)) %>%
+  ggplot(aes(year_published, n )) +
+  geom_line()
+```
+
+Categorical variables
+Code below is a way to separate out the individual categories by coma for each selected row
+```{r}
+categorical_variables <- board_games %>%
+  select(game_id, name, family, category, artist, designer) %>%
+  gather(type, value, -game_id, -name) %>%
+  filter(!is.na(value)) %>%
+  separate_rows(value, sep = ",") %>%
+  arrange(game_id)
+
+categorical_counts <- categorical_variables %>%
+  count(type, value, sort = T)
+
+categorical_counts %>%
+  group_by(type) %>%
+  top_n(20, value) %>%
+  mutate(value = fct_reorder(value, n)) %>%
+  ggplot(aes(value, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "most common categories")
+```
+
