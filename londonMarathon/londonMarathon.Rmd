@@ -57,3 +57,52 @@ london_marathon %>%
   arrange(percent_finished)
 ```
 
+What is the fastest marathon time for categories men and women?
+```{r}
+winners %>%
+  filter(Category %in% c("Men", "Women")) %>%
+  group_by(Category) %>%
+  arrange(Time)
+```
+
+How have the London Marathon Winner's time changed over time?
+```{r}
+winners %>%
+  filter(Category %in% c("Men", "Women")) %>%
+  select(Year, Time, Category) %>%
+  ggplot(aes(Year, Time, color = Category)) +
+  geom_point() +
+  labs(title = "How London Marathon Winners Times have changed over time",
+       subtitle = "Categories Men & Women")
+```
+
+What Nationality wins the most in the London Marathon?
+```{r}
+winners %>%
+  filter(Category %in% c("Men", "Women")) %>%
+  group_by(Nationality) %>%
+  count(Nationality) %>%
+  arrange(desc(n))
+
+
+winners %>%
+  filter(Category %in% c("Men", "Women")) %>%
+  count(Nationality) %>%
+  mutate(Nationality = fct_reorder(Nationality, n)) %>%
+  ggplot(aes(x = Nationality, y = n, fill = Nationality)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Nationality that wins the most in the London Marathon",
+       subtitle = "Categories Men & Women",
+       y = "Count") +
+  theme(legend.position = "none")
+```
+
+What athlete has won the London Marathon the most?
+```{r}
+winners %>%
+  group_by(Athlete) %>%
+  count(Athlete) %>%
+  arrange(desc(n))
+```
+
