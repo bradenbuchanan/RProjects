@@ -3,8 +3,57 @@ title: "London Marathon"
 author: "Braden Buchanan"
 date: "2024-01-05"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+winners <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-04-25/winners.csv')
+london_marathon <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-04-25/london_marathon.csv')
+
+theme_set(theme_minimal())
+```
+
+Exploring Data
+```{r}
+view(winners)
+view(london_marathon)
+```
+
+Change in applications over time 
+```{r}
+london_marathon %>%
+  select(Year, Applicants) %>%
+  ggplot(aes(Year, Applicants)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "London Marathon applications over time")
+```
+
+What is the acceptance rate for the London marathon?
+```{r}
+london_marathon %>%
+  mutate(acceptance_rate = Accepted/Applicants)%>%
+  select(Year, Applicants, acceptance_rate) %>%
+  ggplot(aes(Year, acceptance_rate)) +
+  geom_line() +
+  labs(title = "London Marathon Acceptance Rate Over Time",
+       y = "Acceptance Rate")
+```
+
+What year had the least amount of finishers in the London Marathon?
+```{r}
+london_marathon %>%
+  mutate(percent_finished = Finishers/Starters) %>%
+  select(Year, Starters, Finishers, percent_finished) %>%
+  arrange(percent_finished)
+```
+
