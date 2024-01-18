@@ -3,8 +3,75 @@ title: "Canadian Hockey Player Birth Months"
 author: "Braden Buchanan"
 date: "2024-01-18"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+Load data
+```{r}
+canada_births_1991_2022 <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-01-09/canada_births_1991_2022.csv')
+nhl_player_births <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-01-09/nhl_player_births.csv')
+nhl_rosters <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-01-09/nhl_rosters.csv')
+nhl_teams <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-01-09/nhl_teams.csv')
+
+canadaBirthData <- canada_births_1991_2022
+nhlPlayerBirths <- nhl_player_births
+
+theme_set(theme_minimal())
+```
+
+Load packages
+```{r}
+library(tidyverse)
+```
+
+### Canada births from 1991-2022
+
+Canada birth rate trends 
+```{r}
+canadaBirthData %>%
+  group_by(year) %>%
+  summarise(total_births = sum(births)) %>%
+  ggplot(aes(year, total_births)) +
+  geom_line() +
+  labs(title = "Birth rate in Canada from 91-22") +
+  theme_minimal()
+```
+
+### NHL player births
+
+What birth state province do most NHL players come from
+```{r}
+nhlPlayerBirths %>%
+  filter(!is.na(birth_state_province)) %>%
+  count(birth_state_province) %>%
+  arrange(desc(n))
+
+nhlPlayerBirths %>%
+  filter(!is.na(birth_state_province)) %>%
+  count(birth_state_province) %>%
+  arrange(desc(n)) %>%
+  mutate(provincetotal = n/sum(n))
+```
+
+What month is most common birth month for NHL players?
+```{r}
+library(lubridate)
+
+nhlPlayerBirths %>%
+  group_by(birth_month) %>%
+  summarise(totalPerMonth = sum(birth_month)) %>%
+  mutate(month_name = month(birth_month, label = TRUE, abbr = FALSE)) %>%
+  ggplot(aes(totalPerMonth, month_name, fill = month_name)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "total births per month",
+       y = "months")
+```
+
