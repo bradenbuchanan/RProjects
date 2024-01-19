@@ -20,6 +20,7 @@ nhl_teams <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/
 
 canadaBirthData <- canada_births_1991_2022
 nhlPlayerBirths <- nhl_player_births
+nhl_rosters
 
 theme_set(theme_minimal())
 ```
@@ -73,5 +74,86 @@ nhlPlayerBirths %>%
   theme(legend.position = "none") +
   labs(x = "total births per month",
        y = "months")
+```
+
+What first name appears in the most in the NHL?
+```{r}
+nhl_rosters %>%
+  select(first_name) %>%
+  count(first_name) %>%
+  arrange(desc(n)) %>%
+  head(20)
+```
+
+Have NHL players gotten taller over time?
+```{r}
+nhl_rosters %>%
+  select(height_in_inches, birth_date) %>%
+  mutate(year = year(birth_date)) %>%
+  group_by(year) %>%
+  summarize(average_height = mean(height_in_inches, na.rm = TRUE)) %>%
+  ggplot(aes(x = year, y = average_height)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Average Height by Birth Year",
+       x = "Year of Birth",
+       y = "Average Height (inches)")
+```
+
+What are the most common hockey jersey numbers?
+```{r}
+nhl_rosters %>%
+  count(sweater_number) %>%
+  arrange(desc(n))
+```
+
+Player height and weight
+```{r}
+ggplot(nhl_rosters, aes(x = height_in_inches, y = weight_in_pounds)) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Player Height vs Weight", x = "Height (inches)", y = "Weight (pounds)")
+```
+
+```{r}
+ggplot(nhl_rosters, aes(x = position_code)) +
+  geom_bar() +
+  labs(title = "Number of Players by Position", x = "Position", y = "Count")
+```
+
+Player weight distribution by team
+```{r}
+ggplot(nhl_rosters, aes(x = team_code, y = weight_in_pounds)) +
+  geom_boxplot() +
+  labs(title = "Player Weight Distribution by Team", x = "Team", y = "Weight (pounds)") +
+  theme_minimal()
+```
+
+Country birth distribution
+```{r}
+ggplot(nhl_rosters, aes(x = birth_country)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Number of Players by Birth Country", x = "Country", y = "Count")
+```
+
+Height distribution by position type
+```{r}
+ggplot(nhl_rosters, aes(x = position_type, y = height_in_inches)) +
+  geom_boxplot() +
+  labs(title = "Height Distribution by Position Type", x = "Position Type", y = "Height (inches)") +
+  theme_minimal()
+```
+
+
+```{r}
+nhl_rosters %>%
+  select(season)
+
+nhl_rosters %>%
+  select(season) %>%
+  mutate(
+    season_start = as.numeric(str_sub(season, 1, 4)),
+    season_end = as.numeric(str_sub(season, 5, 8))
+  )
 ```
 
